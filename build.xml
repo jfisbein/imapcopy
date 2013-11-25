@@ -2,7 +2,7 @@
 <project name="ImapCopy" default="build" basedir=".">
 
 	<target name="clean" description="Cleans the file system">
-		<deltree dir="${basedir}/target/" />
+		<delete dir="${basedir}/target/" />
 	</target>
 
 	<target name="target/classes">
@@ -25,9 +25,9 @@
 
 	<target name="distrib" depends="imapCopy.jar">
 
-		<mkdir dir="${basedir}/target/imapCopy" />
+		<mkdir dir="${basedir}/target/distrib" />
 
-		<copy todir="${basedir}/target/imapCopy">
+		<copy todir="${basedir}/target/distrib">
 			<fileset dir="${basedir}/src/etc" />
 			<fileset dir="${basedir}/target">
 				<include name="imapCopy.jar" />
@@ -39,14 +39,15 @@
 				<include name="*.jar" />
 			</fileset>
 		</copy>
+		
+		<chmod dir="${basedir}/target/distrib" includes="*.sh" perm="+x"></chmod>
 
 		<zip destfile="${basedir}/target/imapCopy.zip">
 			<fileset dir="${basedir}/target/">
-				<include name="imapCopy/**" />
+				<include name="distrib/**" />
 			</fileset>
 		</zip>
 
-		<deltree dir="${basedir}/target/imapCopy" />
 	</target>
 
 	<target name="build" description="Builds the app" depends="distrib" />

@@ -12,16 +12,13 @@ Installation Instructions
 
         ant build
 
-* go to target directory and get imapCopy.zip 
-* move it to your desired directory and decompress it
-* Change imapCopy.sh file mode
-
-        chmod +x imapCopy.sh
+* go to target/distrib folder
 
 #### Run as command line tool
 * Run as a command line tool:
 
-        ./imapCopy.sh sourceImapAccount targetImapAccount (ex: ./imapCopy.sh imap://peter:mypassword@foo.com imaps://peter%40gmail.com:myotherpasword@imap.gmail.com)
+        ./imapCopy.sh sourceImapAccount targetImapAccount 
+        (ex: ./imapCopy.sh imap://peter:mypassword@foo.com imaps://peter%40gmail.com:myotherpasword@imap.gmail.com)
       
 * Run using (very basic) Gui
 
