@@ -30,9 +30,10 @@ Installation Instructions
         
 ### Format of the imap accounts url
 
-        {protocol}://[user:password@]{host}
+        {protocol}://[user:password@]{host}[:port]
         
 Where 
 * protocol can be imap or imaps
 * user and password are optional and must be url scaped (ex: peter@gmail.com becomes peter%40gmail.com)
 * host: host of the imap server
+* port: port of the imap server
