@@ -7,10 +7,32 @@ Installation Instructions
 -------------------------
 
 ### Linux and other Unixes
-1. Download the application from download tab
-2. Decompres the package
-3. Change imapCopy.sh file mode (chmod +x imapCopy.sh)
-4. Run as command line tool
-5. Run with ./imapCopy.sh sourceImapAccount targetImapAccount (ex: ./imapCopy.sh imap://peter:mypassword@foo.com imaps://peter%40gmail.com:myotherpasword@imap.gmail.com)
-6. Run with Gui
-7. Run with ./imapCopyGui.sh
+* Download the application from the repository
+* build de jar
+
+        ant build
+
+* go to target directory and get imapCopy.zip 
+* move it to your desired directory and decompress it
+* Change imapCopy.sh file mode
+
+        chmod +x imapCopy.sh
+
+#### Run as command line tool
+* Run as a command line tool:
+
+        ./imapCopy.sh sourceImapAccount targetImapAccount (ex: ./imapCopy.sh imap://peter:mypassword@foo.com imaps://peter%40gmail.com:myotherpasword@imap.gmail.com)
+      
+* Run using (very basic) Gui
+
+        ./imapCopyGui.sh
+        
+        
+### Format of the imap accounts url
+
+        {protocol}://[user:password@]{host}
+        
+Where 
+* protocol can be imap or imaps
+* user and password are optional and must be url scaped (ex: peter@gmail.com becomes peter%40gmail.com)
+* host: host of the imap server
