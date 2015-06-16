@@ -14,7 +14,7 @@ Installation Instructions
 
 * go to target folder
 
-#### Run as command line tool
+#### Run with command line tool
 * Run as a command line tool:
 
         ./imapCopy.sh sourceImapAccount targetImapAccount 
@@ -25,7 +25,7 @@ Installation Instructions
         ./imapCopyGui.sh
         
         
-### Format of the imap accounts url
+### Imap accounts url format
 
         {protocol}://[user:password@]{host}[:port]
         
