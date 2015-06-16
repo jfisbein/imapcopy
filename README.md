@@ -10,9 +10,9 @@ Installation Instructions
 * Download the application from the repository
 * build de jar
 
-        ant build
+        mvn clean package
 
-* go to target/distrib folder
+* go to target folder
 
 #### Run as command line tool
 * Run as a command line tool:
