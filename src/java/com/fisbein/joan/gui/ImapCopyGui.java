@@ -80,7 +80,7 @@ public class ImapCopyGui extends javax.swing.JFrame implements ImapCopyListenerI
 			getContentPane().setLayout(thisLayout);
 			this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 			this.setTitle("Imap Copy");
-			this.setPreferredSize(new java.awt.Dimension(474, 128));
+			this.setPreferredSize(new java.awt.Dimension(600, 128));
 			this.setResizable(false);
 			{
 				labelImapSource = new JLabel();
@@ -150,7 +150,7 @@ public class ImapCopyGui extends javax.swing.JFrame implements ImapCopyListenerI
 					}
 				});
 			}
-			this.setSize(474, 128);
+			this.setSize(520, 110);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -184,6 +184,7 @@ public class ImapCopyGui extends javax.swing.JFrame implements ImapCopyListenerI
 		dialog.setURL(textImapSource.getText());
 		dialog.setModal(true);
 		dialog.setVisible(true);
+		textImapSource.setText(dialog.getURL());
 	}
 
 	private void btnEditImapTargetActionPerformed(ActionEvent evt) {
@@ -197,6 +198,7 @@ public class ImapCopyGui extends javax.swing.JFrame implements ImapCopyListenerI
 		dialog.setURL(textImapTarget.getText());
 		dialog.setModal(true);
 		dialog.setVisible(true);
+		textImapTarget.setText(dialog.getURL());
 	}
 
 	public void eventNotification(ImapCopyEvent event) {
