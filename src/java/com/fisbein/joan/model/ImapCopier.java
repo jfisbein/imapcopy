@@ -45,8 +45,8 @@ public class ImapCopier implements Runnable {
 	}
 
 	/**
-	 * Open a connection to the source Store from where the messages will be copied when
-	 * <code>copy</code> method will be executed
+	 * Open a connection to the source Store from where the messages will be copied when <code>copy</code> method will
+	 * be executed
 	 * 
 	 * @param storeType Type of Store (imap, aimaps, pop3, pop3s)
 	 * @param host Server host name
@@ -60,8 +60,8 @@ public class ImapCopier implements Runnable {
 	}
 
 	/**
-	 * Open a connection to the source Store from where the messages will be copied when
-	 * <code>copy</code> method will be executed
+	 * Open a connection to the source Store from where the messages will be copied when <code>copy</code> method will
+	 * be executed
 	 * 
 	 * @param url URL in the format </code>protocol://user[:password]@server[:port]</code>
 	 * @throws MessagingException
@@ -71,8 +71,8 @@ public class ImapCopier implements Runnable {
 	}
 
 	/**
-	 * Open a connection to the target Store where the messages will be copied when
-	 * <code>copy</code> method will be executed
+	 * Open a connection to the target Store where the messages will be copied when <code>copy</code> method will be
+	 * executed
 	 * 
 	 * @param storeType Type of Store (imap, aimaps, pop3, pop3s)
 	 * @param host Server host name
@@ -86,8 +86,8 @@ public class ImapCopier implements Runnable {
 	}
 
 	/**
-	 * Open a connection to the target Store where the messages will be copied when
-	 * <code>copy</code> method will be executed
+	 * Open a connection to the target Store where the messages will be copied when <code>copy</code> method will be
+	 * executed
 	 * 
 	 * @param url URL in the format </code>protocol://user[:password]@server[:port]</code>
 	 * @throws MessagingException
@@ -167,30 +167,37 @@ public class ImapCopier implements Runnable {
 	 */
 	private void copyFolderAndMessages(Folder sourceFolder, Folder targetFolder, boolean isDefaultFolder)
 			throws MessagingException {
-		if (!isDefaultFolder) {
-			sourceFolder.open(Folder.READ_ONLY);
-			Message[] sourceMessages = sourceFolder.getMessages();
-			log.debug("Copying " + sourceMessages.length + " messages from " + sourceFolder.getFullName() + " Folder");
-			if (sourceMessages.length > 0) {
-				targetFolder.open(Folder.READ_WRITE);
-				try {
-					targetFolder.appendMessages(sourceMessages);
-				} catch (MessagingException e) {
-					log.error("Error copying messages from " + sourceFolder.getFullName() + " Folder", e);
-					copyMessagesOneByOne(targetFolder, sourceMessages);
-				}
-			}
-		}
 
-		Folder[] sourceFolders = sourceFolder.list();
-		for (Folder sourceSubFolder : sourceFolders) {
-			Folder targetSubFolder = targetFolder.getFolder(sourceSubFolder.getName());
-			if (!targetSubFolder.exists()) {
-				log.debug("Creating target Folder: " + targetSubFolder.getFullName());
-				targetSubFolder.create(sourceSubFolder.getType());
+		if (sourceFolder.exists()) {
+			if (!isDefaultFolder) {
+				openfolderIfNeeded(sourceFolder, Folder.READ_ONLY);
+				Message[] sourceMessages = sourceFolder.getMessages();
+				log.debug("Copying " + sourceMessages.length + " messages from " + sourceFolder.getFullName()
+						+ " Folder");
+				if (sourceMessages.length > 0) {
+					openfolderIfNeeded(targetFolder, Folder.READ_WRITE);
+					try {
+						targetFolder.appendMessages(sourceMessages);
+					} catch (MessagingException e) {
+						log.error("Error copying messages from " + sourceFolder.getFullName() + " Folder", e);
+						copyMessagesOneByOne(targetFolder, sourceMessages);
+					}
+					closeFolderIfNeeded(targetFolder);
+				}
+				closeFolderIfNeeded(sourceFolder);
 			}
-			notifyToListeners(targetSubFolder);
-			copyFolderAndMessages(sourceSubFolder, targetSubFolder, false);
+
+			Folder[] sourceFolders = sourceFolder.list();
+			logFoldersList("Source Folders", sourceFolders);
+			for (Folder sourceSubFolder : sourceFolders) {
+				Folder targetSubFolder = targetFolder.getFolder(sourceSubFolder.getName());
+				if (!targetSubFolder.exists()) {
+					log.debug("Creating target Folder: " + targetSubFolder.getFullName());
+					targetSubFolder.create(sourceSubFolder.getType());
+				}
+				notifyToListeners(targetSubFolder);
+				copyFolderAndMessages(sourceSubFolder, targetSubFolder, false);
+			}
 		}
 	}
 
@@ -201,13 +208,35 @@ public class ImapCopier implements Runnable {
 	 * @param messages List of messages
 	 */
 	private void copyMessagesOneByOne(Folder targetFolder, Message[] messages) {
+		int counter = 0;
 		for (Message message : messages) {
+			counter++;
 			Message[] aux = new Message[1];
 			aux[0] = message;
 			try {
+				openfolderIfNeeded(targetFolder, Folder.READ_WRITE);
 				targetFolder.appendMessages(aux);
 			} catch (MessagingException e) {
 				log.error("Error copying 1 message to " + targetFolder.getFullName() + " Folder", e);
+			}
+			if (counter % 100 == 0) {
+				log.debug("Copied " + counter + " messages to " + targetFolder.getFullName());
+			}
+		}
+	}
+
+	private void openfolderIfNeeded(Folder folder, int mode) throws MessagingException {
+		if (!folder.isOpen()) {
+			folder.open(mode);
+		}
+	}
+
+	private void closeFolderIfNeeded(Folder folder) {
+		if (folder.isOpen()) {
+			try {
+				folder.close(false);
+			} catch (MessagingException e) {
+				log.warn("Problems closing folder", e);
 			}
 		}
 	}
@@ -234,6 +263,27 @@ public class ImapCopier implements Runnable {
 
 		if (this.targetStore != null)
 			this.targetStore.close();
+	}
+
+	private void logFoldersList(String message, Folder[] folders) {
+		String txt = message + ": ";
+		for (Folder folder : folders) {
+			txt += folder.getFullName() + "(" + getFolderMessageCount(folder) + "), ";
+		}
+		if (folders.length > 0) {
+			log.debug(txt);
+		}
+	}
+
+	private int getFolderMessageCount(Folder folder) {
+		int res = -1;
+		try {
+			res = folder.getMessageCount();
+		} catch (MessagingException e) {
+			log.warn("Problems getting folder size - " + folder.getFullName());
+		}
+
+		return res;
 	}
 
 	public void run() {
