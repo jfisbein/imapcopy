@@ -17,8 +17,8 @@ Installation Instructions
 #### Run with command line tool
 * Run as a command line tool:
 
-        ./imapCopy.sh sourceImapAccount targetImapAccount 
-        (ex: ./imapCopy.sh imap://peter:mypassword@foo.com imaps://peter%40gmail.com:myotherpasword@imap.gmail.com)
+        ./imapCopy.sh sourceImapAccount targetImapAccount [list of exlcuded folders]
+        (ex: ./imapCopy.sh imap://peter:mypassword@foo.com imaps://peter%40gmail.com:myotherpasword@imap.gmail.com) Spam INBOX
       
 * Run using (very basic) Gui
 

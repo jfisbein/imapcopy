@@ -1,8 +1,11 @@
 package com.fisbein.joan.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.mail.Folder;
 import javax.mail.Message;
@@ -11,6 +14,8 @@ import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.URLName;
 
+import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.collections4.Predicate;
 import org.apache.log4j.Logger;
 
 public class ImapCopier implements Runnable {
@@ -22,26 +27,38 @@ public class ImapCopier implements Runnable {
 
 	private List<ImapCopyListenerInterface> listeners = new ArrayList<ImapCopyListenerInterface>(0);
 
+	private List<String> filteredFolders = new ArrayList<String>();
+
 	public static void main(String[] args) throws MessagingException {
 		log.info("Starting");
 		log.debug("Parameters length:" + args.length);
-		if (args.length == 2) {
+		if (args.length >= 2) {
 			ImapCopier imapCopier = new ImapCopier();
 
 			try {
 				log.debug("opening conections");
 				imapCopier.openSourceConnection(args[0].trim());
 				imapCopier.openTargetConnection(args[1].trim());
+				if (args.length > 2) {
+					for (int i = 2; i < args.length; i++) {
+						imapCopier.addFilteredFolder(args[i]);
+					}
+				}
 				imapCopier.copy();
 			} finally {
 				imapCopier.close();
 			}
 		} else {
-			String usage = "usage: imapCopy source target\n";
+			String usage = "usage: imapCopy source target [excludedFolder]\n";
 			usage += "source & target format: protocol://user[:password]@server[:port]\n";
 			usage += "protocols: imap or imaps";
 			System.out.println(usage);
 		}
+	}
+
+	public void addFilteredFolder(String folderName) {
+		log.debug("Adding '" + folderName + "' to filtered folders");
+		filteredFolders.add(folderName);
 	}
 
 	/**
@@ -168,19 +185,22 @@ public class ImapCopier implements Runnable {
 	private void copyFolderAndMessages(Folder sourceFolder, Folder targetFolder, boolean isDefaultFolder)
 			throws MessagingException {
 
-		if (sourceFolder.exists()) {
+		if (sourceFolder.exists() && !filteredFolders.contains(sourceFolder.getFullName())) {
 			if (!isDefaultFolder) {
 				openfolderIfNeeded(sourceFolder, Folder.READ_ONLY);
-				Message[] sourceMessages = sourceFolder.getMessages();
-				log.debug("Copying " + sourceMessages.length + " messages from " + sourceFolder.getFullName()
+				openfolderIfNeeded(targetFolder, Folder.READ_ONLY);
+
+				Message[] notCopiedMessages = getNotCopiedMessages(sourceFolder, targetFolder);
+
+				log.debug("Copying " + notCopiedMessages.length + " messages from " + sourceFolder.getFullName()
 						+ " Folder");
-				if (sourceMessages.length > 0) {
+				if (notCopiedMessages.length > 0) {
 					openfolderIfNeeded(targetFolder, Folder.READ_WRITE);
 					try {
-						targetFolder.appendMessages(sourceMessages);
+						targetFolder.appendMessages(notCopiedMessages);
 					} catch (MessagingException e) {
 						log.error("Error copying messages from " + sourceFolder.getFullName() + " Folder", e);
-						copyMessagesOneByOne(targetFolder, sourceMessages);
+						copyMessagesOneByOne(targetFolder, notCopiedMessages);
 					}
 					closeFolderIfNeeded(targetFolder);
 				}
@@ -198,7 +218,17 @@ public class ImapCopier implements Runnable {
 				notifyToListeners(targetSubFolder);
 				copyFolderAndMessages(sourceSubFolder, targetSubFolder, false);
 			}
+		} else {
+			log.info("Skipping folder " + sourceFolder.getFullName());
 		}
+	}
+
+	private Message[] getNotCopiedMessages(Folder sourceFolder, Folder targetFolder) throws MessagingException {
+		log.info("Looking for non synced messages from folder " + sourceFolder.getFullName());
+		List<Message> sourceMessages = Arrays.asList(sourceFolder.getMessages());
+		List<Message> res = ListUtils.select(sourceMessages, new MessageFilterPredicate(targetFolder.getMessages()));
+
+		return res.toArray(new Message[0]);
 	}
 
 	/**
@@ -226,7 +256,8 @@ public class ImapCopier implements Runnable {
 	}
 
 	private void openfolderIfNeeded(Folder folder, int mode) throws MessagingException {
-		if (!folder.isOpen()) {
+		if (!folder.isOpen() || folder.getMode() != mode) {
+			closeFolderIfNeeded(folder);
 			folder.open(mode);
 		}
 	}
@@ -297,6 +328,25 @@ public class ImapCopier implements Runnable {
 			} catch (MessagingException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+
+	class MessageFilterPredicate implements Predicate<Message> {
+		Set<String> messagesId = new HashSet<String>();
+
+		public MessageFilterPredicate(Message[] filterMessages) throws MessagingException {
+			for (Message message : filterMessages) {
+				messagesId.add(message.getHeader("Message-ID")[0]);
+			}
+		}
+
+		public boolean evaluate(Message message) {
+			boolean res = true;
+			try {
+				res = messagesId.isEmpty() || !messagesId.contains(message.getHeader("Message-ID")[0]);
+			} catch (MessagingException e) {}
+
+			return res;
 		}
 	}
 }
