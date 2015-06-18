@@ -5,4 +5,4 @@ if [ ! -d "$JAVA_HOME" ] ; then
     JAVA=${JAVA_HOME}/bin/java
 fi
 
-${JAVA} -cp imapcopy-*.jar com.fisbein.joan.model.ImapCopier $*
+${JAVA} -cp imapcopy-*.jar com.fisbein.joan.model.ImapCopier ${1+"$@"}
