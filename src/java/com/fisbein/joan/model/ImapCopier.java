@@ -35,7 +35,7 @@ public class ImapCopier implements Runnable {
             ImapCopier imapCopier = new ImapCopier();
 
             try {
-                log.debug("opening conections");
+                log.debug("opening connections");
                 imapCopier.openSourceConnection(args[0].trim());
                 imapCopier.openTargetConnection(args[1].trim());
                 if (args.length > 2) {
@@ -68,7 +68,7 @@ public class ImapCopier implements Runnable {
      * @param host      Server host name
      * @param user      User
      * @param password  Password
-     * @throws MessagingException
+     * @throws MessagingException Messaging Exception
      */
     public void openSourceConnection(String storeType, String host, String user, String password)
             throws MessagingException {
@@ -80,7 +80,7 @@ public class ImapCopier implements Runnable {
      * be executed
      *
      * @param url URL in the format </code>protocol://user[:password]@server[:port]</code>
-     * @throws MessagingException
+     * @throws MessagingException Messaging Exception
      */
     public void openSourceConnection(String url) throws MessagingException {
         sourceStore = openConnection(url);
@@ -94,7 +94,7 @@ public class ImapCopier implements Runnable {
      * @param host      Server host name
      * @param user      User
      * @param password  Password
-     * @throws MessagingException
+     * @throws MessagingException Messaging Exception
      */
     public void openTargetConnection(String storeType, String host, String user, String password)
             throws MessagingException {
@@ -106,7 +106,7 @@ public class ImapCopier implements Runnable {
      * executed
      *
      * @param url URL in the format </code>protocol://user[:password]@server[:port]</code>
-     * @throws MessagingException
+     * @throws MessagingException Messaging Exception
      */
     public void openTargetConnection(String url) throws MessagingException {
         targetStore = openConnection(url);
@@ -120,7 +120,7 @@ public class ImapCopier implements Runnable {
      * @param user      User
      * @param password  Password
      * @return Mail Store for the connection
-     * @throws MessagingException
+     * @throws MessagingException Messaging Exception
      */
     private Store openConnection(String storeType, String host, String user, String password) throws MessagingException {
         log.debug("opening " + storeType + " conection to " + host);
@@ -138,7 +138,7 @@ public class ImapCopier implements Runnable {
      *
      * @param url URL in the format </code>protocol://user[:password]@server[:port]</code>
      * @return Mail Store for the connection
-     * @throws MessagingException
+     * @throws MessagingException Messaging Exception
      */
     private Store openConnection(String url) throws MessagingException {
         URLName urlName = new URLName(url);
@@ -155,10 +155,10 @@ public class ImapCopier implements Runnable {
      * Copy the folders and messages defined with the methods <code>openSourceConnection</code> and
      * <code>openTargetConnection</code>
      *
-     * @throws MessagingException
+     * @throws MessagingException Messaging Exception
      */
     public void copy() throws MessagingException {
-        ImapCopyAplicationEvent evt = new ImapCopyAplicationEvent(ImapCopyAplicationEvent.START);
+        ImapCopyApplicationEvent evt = new ImapCopyApplicationEvent(ImapCopyApplicationEvent.START);
         for (ImapCopyListenerInterface listener : listeners) {
             listener.eventNotification(evt);
         }
@@ -167,7 +167,7 @@ public class ImapCopier implements Runnable {
         Folder defaultTargetFolder = targetStore.getDefaultFolder();
         copyFolderAndMessages(defaultSourceFolder, defaultTargetFolder, true);
 
-        evt = new ImapCopyAplicationEvent(ImapCopyAplicationEvent.END);
+        evt = new ImapCopyApplicationEvent(ImapCopyApplicationEvent.END);
         for (ImapCopyListenerInterface listener : listeners) {
             listener.eventNotification(evt);
         }
@@ -179,22 +179,22 @@ public class ImapCopier implements Runnable {
      * @param sourceFolder    Source Folder
      * @param targetFolder    Target Folder
      * @param isDefaultFolder Flag if the folder are the defualt folder of thre store
-     * @throws MessagingException
+     * @throws MessagingException Messaging Exception
      */
     private void copyFolderAndMessages(Folder sourceFolder, Folder targetFolder, boolean isDefaultFolder)
             throws MessagingException {
 
         if (sourceFolder.exists() && !filteredFolders.contains(sourceFolder.getFullName())) {
             if (!isDefaultFolder) {
-                openfolderIfNeeded(sourceFolder, Folder.READ_ONLY);
-                openfolderIfNeeded(targetFolder, Folder.READ_ONLY);
+                openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
+                openFolderIfNeeded(targetFolder, Folder.READ_ONLY);
 
                 Message[] notCopiedMessages = getNotCopiedMessages(sourceFolder, targetFolder);
 
                 log.debug("Copying " + notCopiedMessages.length + " messages from " + sourceFolder.getFullName()
                         + " Folder");
                 if (notCopiedMessages.length > 0) {
-                    openfolderIfNeeded(targetFolder, Folder.READ_WRITE);
+                    openFolderIfNeeded(targetFolder, Folder.READ_WRITE);
                     try {
                         targetFolder.appendMessages(notCopiedMessages);
                     } catch (MessagingException e) {
@@ -243,7 +243,7 @@ public class ImapCopier implements Runnable {
             Message[] aux = new Message[1];
             aux[0] = message;
             try {
-                openfolderIfNeeded(targetFolder, Folder.READ_WRITE);
+                openFolderIfNeeded(targetFolder, Folder.READ_WRITE);
                 targetFolder.appendMessages(aux);
             } catch (MessagingException e) {
                 log.error("Error copying 1 message to " + targetFolder.getFullName() + " Folder", e);
@@ -254,7 +254,7 @@ public class ImapCopier implements Runnable {
         }
     }
 
-    private void openfolderIfNeeded(Folder folder, int mode) throws MessagingException {
+    private void openFolderIfNeeded(Folder folder, int mode) throws MessagingException {
         if (!folder.isOpen() || folder.getMode() != mode) {
             closeFolderIfNeeded(folder);
             folder.open(mode);
@@ -285,7 +285,7 @@ public class ImapCopier implements Runnable {
     /**
      * Closes the open resources
      *
-     * @throws MessagingException
+     * @throws MessagingException Messaging Exception
      */
     public void close() throws MessagingException {
         if (sourceStore != null) {
@@ -322,12 +322,12 @@ public class ImapCopier implements Runnable {
         try {
             copy();
         } catch (MessagingException e) {
-            e.printStackTrace();
+            log.warn(e.getMessage(), e);
         } finally {
             try {
                 close();
             } catch (MessagingException e) {
-                e.printStackTrace();
+                log.warn(e.getMessage(), e);
             }
         }
     }
@@ -335,7 +335,7 @@ public class ImapCopier implements Runnable {
     class MessageFilterPredicate implements Predicate<Message> {
         Set<String> messagesId = new HashSet<String>();
 
-        public MessageFilterPredicate(Message[] filterMessages) throws MessagingException {
+        MessageFilterPredicate(Message[] filterMessages) throws MessagingException {
             for (Message message : filterMessages) {
                 messagesId.add(message.getHeader("Message-ID")[0]);
             }
@@ -345,7 +345,7 @@ public class ImapCopier implements Runnable {
             boolean res = true;
             try {
                 res = messagesId.isEmpty() || !messagesId.contains(message.getHeader("Message-ID")[0]);
-            } catch (MessagingException e) {
+            } catch (MessagingException ignored) {
             }
 
             return res;
