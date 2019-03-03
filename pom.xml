@@ -5,9 +5,40 @@
     <artifactId>imapcopy</artifactId>
     <version>1.1.0</version>
 
+    <inceptionYear>2015</inceptionYear>
+    <url>https://github.com/jfisbein/imapcopy</url>
+    <scm>
+        <url>https://github.com/jfisbein/imapcopy</url>
+        <developerConnection>git@github.com:jfisbein/imapcopy.git</developerConnection>
+    </scm>
+
     <prerequisites>
         <maven>3.0.5</maven>
     </prerequisites>
+
+    <dependencies>
+        <dependency>
+            <groupId>javax.mail</groupId>
+            <artifactId>javax.mail-api</artifactId>
+            <version>1.6.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+            <version>1.6.2</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.3</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <sourceDirectory>src/java</sourceDirectory>
@@ -21,8 +52,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.7.0</version>
                 <configuration>
-                    <source/>
-                    <target/>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
 
@@ -48,6 +79,7 @@
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
@@ -74,36 +106,5 @@
             </plugin>
         </plugins>
     </build>
-    <inceptionYear>2015</inceptionYear>
-    <url>https://github.com/jfisbein/imapcopy</url>
-    <scm>
-        <url>https://github.com/jfisbein/imapcopy</url>
-        <developerConnection>git@github.com:jfisbein/imapcopy.git</developerConnection>
-    </scm>
-    <dependencies>
-        <dependency>
-            <groupId>javax.mail</groupId>
-            <artifactId>javax.mail-api</artifactId>
-            <version>1.5.3</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-            <version>1.5.3</version>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.17</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-            <version>4.0</version>
-        </dependency>
-
-
-    </dependencies>
 
 </project>
