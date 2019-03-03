@@ -24,9 +24,9 @@ public class ImapCopier implements Runnable {
 
     private Store targetStore = null;
 
-    private List<ImapCopyListenerInterface> listeners = new ArrayList<ImapCopyListenerInterface>(0);
+    private List<ImapCopyListenerInterface> listeners = new ArrayList<>(0);
 
-    private List<String> filteredFolders = new ArrayList<String>();
+    private List<String> filteredFolders = new ArrayList<>();
 
     public static void main(String[] args) throws MessagingException {
         log.info("Starting");
@@ -55,6 +55,11 @@ public class ImapCopier implements Runnable {
         }
     }
 
+    /**
+     * Add folder to filtered list. Folder is this list will be skipped from synchronization.
+     *
+     * @param folderName Folder name
+     */
     public void addFilteredFolder(String folderName) {
         log.debug("Adding '" + folderName + "' to filtered folders");
         filteredFolders.add(folderName);
@@ -225,6 +230,7 @@ public class ImapCopier implements Runnable {
     private Message[] getNotCopiedMessages(Folder sourceFolder, Folder targetFolder) throws MessagingException {
         log.info("Looking for non synced messages from folder " + sourceFolder.getFullName());
         List<Message> sourceMessages = Arrays.asList(sourceFolder.getMessages());
+        log.debug("Got " + sourceMessages.size() + " messages from source folder");
         List<Message> res = ListUtils.select(sourceMessages, new MessageFilterPredicate(targetFolder.getMessages()));
 
         return res.toArray(new Message[0]);
@@ -284,16 +290,19 @@ public class ImapCopier implements Runnable {
 
     /**
      * Closes the open resources
-     *
-     * @throws MessagingException Messaging Exception
      */
-    public void close() throws MessagingException {
-        if (sourceStore != null) {
-            sourceStore.close();
-        }
+    public void close() {
+        closeStore(sourceStore);
+        closeStore(targetStore);
+    }
 
-        if (targetStore != null) {
-            targetStore.close();
+    private void closeStore(Store store) {
+        if (store != null) {
+            try {
+                store.close();
+            } catch (MessagingException e) {
+                log.warn(e.getMessage(), e);
+            }
         }
     }
 
@@ -318,29 +327,31 @@ public class ImapCopier implements Runnable {
         return res;
     }
 
+    @Override
     public void run() {
         try {
             copy();
         } catch (MessagingException e) {
             log.warn(e.getMessage(), e);
         } finally {
-            try {
-                close();
-            } catch (MessagingException e) {
-                log.warn(e.getMessage(), e);
-            }
+            close();
         }
     }
 
     class MessageFilterPredicate implements Predicate<Message> {
-        Set<String> messagesId = new HashSet<String>();
+        Set<String> messagesId = new HashSet<>();
 
-        MessageFilterPredicate(Message[] filterMessages) throws MessagingException {
+        MessageFilterPredicate(Message[] filterMessages) {
             for (Message message : filterMessages) {
-                messagesId.add(message.getHeader("Message-ID")[0]);
+                try {
+                    messagesId.add(message.getHeader("Message-ID")[0]);
+                } catch (MessagingException e) {
+                    log.warn("Error getting Message-ID", e);
+                }
             }
         }
 
+        @Override
         public boolean evaluate(Message message) {
             boolean res = true;
             try {
