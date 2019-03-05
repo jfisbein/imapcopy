@@ -199,6 +199,7 @@ public class ImapCopier implements Runnable {
                 log.debug("Copying " + notCopiedMessages.length + " messages from " + sourceFolder.getFullName()
                         + " Folder");
                 if (notCopiedMessages.length > 0) {
+                    openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
                     openFolderIfNeeded(targetFolder, Folder.READ_WRITE);
                     try {
                         targetFolder.appendMessages(notCopiedMessages);
@@ -231,6 +232,7 @@ public class ImapCopier implements Runnable {
         log.info("Looking for non synced messages from folder " + sourceFolder.getFullName());
         List<Message> sourceMessages = Arrays.asList(sourceFolder.getMessages());
         log.debug("Got " + sourceMessages.size() + " messages from source folder");
+        openFolderIfNeeded(targetFolder, Folder.READ_ONLY);
         List<Message> res = ListUtils.select(sourceMessages, new MessageFilterPredicate(targetFolder.getMessages()));
 
         return res.toArray(new Message[0]);
@@ -264,6 +266,12 @@ public class ImapCopier implements Runnable {
         if (!folder.isOpen() || folder.getMode() != mode) {
             closeFolderIfNeeded(folder);
             folder.open(mode);
+        }
+    }
+
+    private void reconnectStoreIfNeeded(Store store) throws MessagingException {
+        if (!store.isConnected()) {
+            store.connect();
         }
     }
 
