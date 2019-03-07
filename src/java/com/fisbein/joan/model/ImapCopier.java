@@ -199,15 +199,21 @@ public class ImapCopier implements Runnable {
                 log.debug("Copying " + notCopiedMessages.length + " messages from " + sourceFolder.getFullName()
                         + " Folder");
                 if (notCopiedMessages.length > 0) {
-                    openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
-                    openFolderIfNeeded(targetFolder, Folder.READ_WRITE);
-                    try {
-                        targetFolder.appendMessages(notCopiedMessages);
-                    } catch (MessagingException e) {
-                        log.error("Error copying messages from " + sourceFolder.getFullName() + " Folder", e);
-                        copyMessagesOneByOne(targetFolder, notCopiedMessages);
+                    Message[][] messages = chunkArray(notCopiedMessages, 500);
+
+                    for (Message[] messagesChunk : messages) {
+                        openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
+                        openFolderIfNeeded(targetFolder, Folder.READ_WRITE);
+                        try {
+                            log.info("Copying chunk of " + messagesChunk.length + " messages");
+                            targetFolder.appendMessages(messagesChunk);
+                        } catch (MessagingException e) {
+                            log.error("Error copying messages from " + sourceFolder.getFullName() + " Folder", e);
+                            log.info("Copying messages from chunk one by one");
+                            copyMessagesOneByOne(targetFolder, messagesChunk);
+                        }
+                        closeFolderIfNeeded(targetFolder);
                     }
-                    closeFolderIfNeeded(targetFolder);
                 }
                 closeFolderIfNeeded(sourceFolder);
             }
@@ -226,6 +232,17 @@ public class ImapCopier implements Runnable {
         } else {
             log.info("Skipping folder " + sourceFolder.getFullName());
         }
+    }
+
+    private Message[][] chunkArray(Message[] array, int chunkSize) {
+        int chunkedSize = (int) Math.ceil((double) array.length / chunkSize); // chunked array size
+        Message[][] chunked = new Message[chunkedSize][chunkSize];
+        for (int index = 0; index < chunkedSize; index++) {
+            Message[] chunk = new Message[chunkSize]; // small array
+            System.arraycopy(array, index * chunkSize, chunk, 0, Math.min(chunkSize, array.length - index * chunkSize));
+            chunked[index] = chunk;
+        }
+        return chunked;
     }
 
     private Message[] getNotCopiedMessages(Folder sourceFolder, Folder targetFolder) throws MessagingException {
