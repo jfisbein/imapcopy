@@ -67,7 +67,7 @@ public class ImapCopier implements Runnable {
      * Open a connection to the source Store from where the messages will be copied when <code>copy</code> method will
      * be executed
      *
-     * @param storeType Type of Store (imap, aimaps, pop3, pop3s)
+     * @param storeType Type of Store (imap, imaps, pop3, pop3s)
      * @param host      Server host name
      * @param user      User
      * @param password  Password
@@ -93,7 +93,7 @@ public class ImapCopier implements Runnable {
      * Open a connection to the target Store where the messages will be copied when <code>copy</code> method will be
      * executed
      *
-     * @param storeType Type of Store (imap, aimaps, pop3, pop3s)
+     * @param storeType Type of Store (imap, imaps, pop3, pop3s)
      * @param host      Server host name
      * @param user      User
      * @param password  Password
@@ -118,7 +118,7 @@ public class ImapCopier implements Runnable {
     /**
      * Opens a connection to a mail server
      *
-     * @param storeType Type of Store (imap, aimaps, pop3, pop3s)
+     * @param storeType Type of Store (imap, imaps, pop3, pop3s)
      * @param host      Server host name
      * @param user      User
      * @param password  Password
@@ -126,7 +126,7 @@ public class ImapCopier implements Runnable {
      * @throws MessagingException Messaging Exception
      */
     private Store openConnection(String storeType, String host, String user, String password) throws MessagingException {
-        log.debug("opening " + storeType + " conection to " + host);
+        log.debug("opening " + storeType + " connection to " + host);
         Properties props = new Properties();
         Session session = Session.getDefaultInstance(props);
         Store store = session.getStore(storeType);
@@ -145,7 +145,7 @@ public class ImapCopier implements Runnable {
      */
     private Store openConnection(String url) throws MessagingException {
         URLName urlName = new URLName(url);
-        log.debug("opening " + urlName.getProtocol() + " conection to " + urlName.getHost() + " with " + urlName.getUsername());
+        log.debug("opening " + urlName.getProtocol() + " connection to " + urlName.getHost() + " with " + urlName.getUsername());
         Properties props = new Properties();
         Session session = Session.getDefaultInstance(props);
         Store store = session.getStore(urlName);
@@ -167,11 +167,11 @@ public class ImapCopier implements Runnable {
     }
 
     /**
-     * Copy recusively the soruce folder and his contents to the target folder
+     * Copy recursively the source folder and his contents to the target folder
      *
      * @param sourceFolder    Source Folder
      * @param targetFolder    Target Folder
-     * @param isDefaultFolder Flag if the folder are the defualt folder of thre store
+     * @param isDefaultFolder Flag if the folder are the default folder of the store
      * @throws MessagingException Messaging Exception
      */
     private void copyFolderAndMessages(Folder sourceFolder, Folder targetFolder, boolean isDefaultFolder)
