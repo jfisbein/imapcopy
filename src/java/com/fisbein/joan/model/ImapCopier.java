@@ -24,8 +24,6 @@ public class ImapCopier implements Runnable {
 
     private Store targetStore = null;
 
-    private List<ImapCopyListenerInterface> listeners = new ArrayList<>(0);
-
     private List<String> filteredFolders = new ArrayList<>();
 
     public static void main(String[] args) throws MessagingException {
@@ -163,19 +161,9 @@ public class ImapCopier implements Runnable {
      * @throws MessagingException Messaging Exception
      */
     public void copy() throws MessagingException {
-        ImapCopyApplicationEvent evt = new ImapCopyApplicationEvent(ImapCopyApplicationEvent.START);
-        for (ImapCopyListenerInterface listener : listeners) {
-            listener.eventNotification(evt);
-        }
-
         Folder defaultSourceFolder = sourceStore.getDefaultFolder();
         Folder defaultTargetFolder = targetStore.getDefaultFolder();
         copyFolderAndMessages(defaultSourceFolder, defaultTargetFolder, true);
-
-        evt = new ImapCopyApplicationEvent(ImapCopyApplicationEvent.END);
-        for (ImapCopyListenerInterface listener : listeners) {
-            listener.eventNotification(evt);
-        }
     }
 
     /**
@@ -226,7 +214,7 @@ public class ImapCopier implements Runnable {
                     log.debug("Creating target Folder: " + targetSubFolder.getFullName());
                     targetSubFolder.create(sourceSubFolder.getType());
                 }
-                notifyToListeners(targetSubFolder);
+
                 copyFolderAndMessages(sourceSubFolder, targetSubFolder, false);
             }
         } else {
@@ -300,17 +288,6 @@ public class ImapCopier implements Runnable {
                 log.warn("Problems closing folder", e);
             }
         }
-    }
-
-    private void notifyToListeners(Folder folder) {
-        ImapCopyFolderEvent evt = new ImapCopyFolderEvent(folder.getFullName());
-        for (ImapCopyListenerInterface listener : listeners) {
-            listener.eventNotification(evt);
-        }
-    }
-
-    public void addImapCopyListener(ImapCopyListenerInterface listener) {
-        listeners.add(listener);
     }
 
     /**
