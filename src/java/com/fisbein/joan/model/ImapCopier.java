@@ -187,7 +187,7 @@ public class ImapCopier implements Runnable {
                 log.debug("Copying " + notCopiedMessages.length + " messages from " + sourceFolder.getFullName()
                         + " Folder");
                 if (notCopiedMessages.length > 0) {
-                    Message[][] messages = chunkArray(notCopiedMessages, 500);
+                    Message[][] messages = chunkArray(notCopiedMessages, 100);
 
                     for (Message[] messagesChunk : messages) {
                         openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
@@ -268,6 +268,7 @@ public class ImapCopier implements Runnable {
     }
 
     private void openFolderIfNeeded(Folder folder, int mode) throws MessagingException {
+        reconnectStoreIfNeeded(folder.getStore());
         if (!folder.isOpen() || folder.getMode() != mode) {
             closeFolderIfNeeded(folder);
             folder.open(mode);
