@@ -180,7 +180,7 @@ public class ImapCopier implements Runnable {
         if (sourceFolder.exists() && !filteredFolders.contains(sourceFolder.getFullName())) {
             if (!isDefaultFolder) {
                 openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
-                openFolderIfNeeded(targetFolder, Folder.READ_ONLY);
+                openFolderIfNeeded(targetFolder, Folder.READ_WRITE);
 
                 Message[] notCopiedMessages = getNotCopiedMessages(sourceFolder, targetFolder);
 
