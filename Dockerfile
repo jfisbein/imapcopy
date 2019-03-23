@@ -5,5 +5,4 @@ RUN mvn package --batch-mode
 
 FROM openjdk:8-jre-alpine
 COPY --from=maven target/imapcopy-*.jar /imapcopy.jar
-EXPOSE 8080
 ENTRYPOINT ["java", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCGroupMemoryLimitForHeap", "-jar", "/imapcopy.jar"]
