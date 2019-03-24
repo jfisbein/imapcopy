@@ -163,22 +163,22 @@ public class ImapCopier implements Runnable {
     public void copy() throws MessagingException {
         Folder defaultSourceFolder = sourceStore.getDefaultFolder();
         Folder defaultTargetFolder = targetStore.getDefaultFolder();
-        copyFolderAndMessages(defaultSourceFolder, defaultTargetFolder, true);
+        copyFolderAndMessages(defaultSourceFolder, defaultTargetFolder);
     }
 
     /**
      * Copy recursively the source folder and his contents to the target folder
      *
-     * @param sourceFolder    Source Folder
-     * @param targetFolder    Target Folder
-     * @param isDefaultFolder Flag if the folder are the default folder of the store
+     * @param sourceFolder Source Folder
+     * @param targetFolder Target Folder
      * @throws MessagingException Messaging Exception
      */
-    private void copyFolderAndMessages(Folder sourceFolder, Folder targetFolder, boolean isDefaultFolder)
+    private void copyFolderAndMessages(Folder sourceFolder, Folder targetFolder)
             throws MessagingException {
 
         if (sourceFolder.exists() && !filteredFolders.contains(sourceFolder.getFullName())) {
-            if (!isDefaultFolder) {
+            // Copying messages
+            if (isType(sourceFolder, Folder.HOLDS_MESSAGES)) {
                 log.info("Synchronizing " + sourceFolder.getFullName() + " folder");
                 openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
                 openFolderIfNeeded(targetFolder, Folder.READ_WRITE);
@@ -207,6 +207,7 @@ public class ImapCopier implements Runnable {
                 closeFolderIfNeeded(sourceFolder);
             }
 
+            //Iterating subfolders
             Folder[] sourceFolders = sourceFolder.list();
             logFoldersList("Source Folders", sourceFolders);
             for (Folder sourceSubFolder : sourceFolders) {
@@ -216,7 +217,7 @@ public class ImapCopier implements Runnable {
                     targetSubFolder.create(sourceSubFolder.getType());
                 }
 
-                copyFolderAndMessages(sourceSubFolder, targetSubFolder, false);
+                copyFolderAndMessages(sourceSubFolder, targetSubFolder);
             }
         } else {
             log.info("Skipping folder " + sourceFolder.getFullName());
@@ -318,15 +319,13 @@ public class ImapCopier implements Runnable {
 
     private void logFoldersList(String message, Folder[] folders) {
         List<String> messageParts = new ArrayList<>();
-        messageParts.add(message);
-        messageParts.add(": ");
 
         for (Folder folder : folders) {
             messageParts.add(folder.getFullName() + "(" + getFolderMessageCount(folder) + ")");
         }
 
         if (folders.length > 0) {
-            log.debug(String.join(", ", messageParts));
+            log.debug(message + ": " + String.join(", ", messageParts));
         }
     }
 
@@ -339,6 +338,10 @@ public class ImapCopier implements Runnable {
         }
 
         return res;
+    }
+
+    private boolean isType(Folder folder, int type) throws MessagingException {
+        return ((folder.getType() & Folder.HOLDS_MESSAGES) != 0);
     }
 
     @Override
