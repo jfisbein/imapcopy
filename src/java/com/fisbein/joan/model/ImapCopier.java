@@ -179,6 +179,7 @@ public class ImapCopier implements Runnable {
 
         if (sourceFolder.exists() && !filteredFolders.contains(sourceFolder.getFullName())) {
             if (!isDefaultFolder) {
+                log.info("Synchronizing " + sourceFolder.getFullName() + " folder");
                 openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
                 openFolderIfNeeded(targetFolder, Folder.READ_WRITE);
 
@@ -234,11 +235,16 @@ public class ImapCopier implements Runnable {
     }
 
     private Message[] getNotCopiedMessages(Folder sourceFolder, Folder targetFolder) throws MessagingException {
-        log.info("Looking for non synced messages from folder " + sourceFolder.getFullName());
-        List<Message> sourceMessages = Arrays.asList(sourceFolder.getMessages());
-        log.debug("Got " + sourceMessages.size() + " messages from source folder");
-        openFolderIfNeeded(targetFolder, Folder.READ_ONLY);
-        List<Message> res = ListUtils.select(sourceMessages, new MessageFilterPredicate(targetFolder.getMessages()));
+        List<Message> res = new ArrayList<>();
+        if (sourceFolder.getMessageCount() != targetFolder.getMessageCount()) {
+            log.info("Looking for non synced messages from folder " + sourceFolder.getFullName());
+            List<Message> sourceMessages = Arrays.asList(sourceFolder.getMessages());
+            log.debug("Got " + sourceMessages.size() + " messages from source folder");
+            openFolderIfNeeded(targetFolder, Folder.READ_ONLY);
+            res = ListUtils.select(sourceMessages, new MessageFilterPredicate(targetFolder.getMessages()));
+        } else {
+            log.debug("Source & target folder have the same size, skipping.");
+        }
 
         return res.toArray(new Message[0]);
     }
@@ -277,6 +283,7 @@ public class ImapCopier implements Runnable {
 
     private void reconnectStoreIfNeeded(Store store) throws MessagingException {
         if (!store.isConnected()) {
+            log.debug("Reconnecting store - " + store);
             store.connect();
         }
     }
@@ -310,12 +317,16 @@ public class ImapCopier implements Runnable {
     }
 
     private void logFoldersList(String message, Folder[] folders) {
-        String txt = message + ": ";
+        List<String> messageParts = new ArrayList<>();
+        messageParts.add(message);
+        messageParts.add(": ");
+
         for (Folder folder : folders) {
-            txt += folder.getFullName() + "(" + getFolderMessageCount(folder) + "), ";
+            messageParts.add(folder.getFullName() + "(" + getFolderMessageCount(folder) + ")");
         }
+
         if (folders.length > 0) {
-            log.debug(txt);
+            log.debug(String.join(", ", messageParts));
         }
     }
 
