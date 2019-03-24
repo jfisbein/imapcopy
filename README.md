@@ -8,7 +8,7 @@ Usage Instructions
 
 #### Run as a docker container: **(recommended)**
 
-        docker run --name imapcopy jfisbein/imapcopy imap://peter:mypassword@foo.com imaps://peter%40gmail.com:myotherpasword@imap.gmail.com Spam INBOX [Gmail] Spam Drafts Bin [Gmail] "Bart Simpson"        
+        docker run -it --name imapcopy jfisbein/imapcopy imap://peter:mypassword@foo.com imaps://peter%40gmail.com:myotherpasword@imap.gmail.com Spam INBOX [Gmail] Spam Drafts Bin [Gmail] "Bart Simpson"        
 
 #### Run as a command line tool:
 * Download the application from the repository
