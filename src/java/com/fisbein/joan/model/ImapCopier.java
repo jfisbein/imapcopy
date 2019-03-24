@@ -228,7 +228,7 @@ public class ImapCopier implements Runnable {
         int chunkedSize = (int) Math.ceil((double) array.length / chunkSize); // chunked array size
         Message[][] chunked = new Message[chunkedSize][chunkSize];
         for (int index = 0; index < chunkedSize; index++) {
-            Message[] chunk = new Message[chunkSize]; // small array
+            Message[] chunk = new Message[Math.min(chunkSize, array.length - index * chunkSize)]; // small array
             System.arraycopy(array, index * chunkSize, chunk, 0, Math.min(chunkSize, array.length - index * chunkSize));
             chunked[index] = chunk;
         }
