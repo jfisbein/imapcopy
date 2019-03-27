@@ -185,19 +185,20 @@ public class ImapCopier implements Runnable {
 
                 Message[] notCopiedMessages = getNotCopiedMessages(sourceFolder, targetFolder);
 
-                log.debug("Copying " + notCopiedMessages.length + " messages from " + sourceFolder.getFullName()
-                        + " Folder");
-                if (notCopiedMessages.length > 0) {
+                log.debug("Copying " + notCopiedMessages.length + " messages from " + sourceFolder.getFullName() + " Folder");
+                int pendingMessages = notCopiedMessages.length;
+                if (pendingMessages > 0) {
                     Message[][] messages = chunkArray(notCopiedMessages, 100);
 
                     for (Message[] messagesChunk : messages) {
                         openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
                         openFolderIfNeeded(targetFolder, Folder.READ_WRITE);
                         try {
-                            log.info("Copying chunk of " + messagesChunk.length + " messages");
+                            log.info("Copying chunk of " + messagesChunk.length + " messages. Pending: " + pendingMessages);
                             targetFolder.appendMessages(messagesChunk);
+                            pendingMessages = pendingMessages - messages.length;
                         } catch (MessagingException e) {
-                            log.error("Error copying messages from " + sourceFolder.getFullName() + " Folder", e);
+                            log.warn("Error copying messages from " + sourceFolder.getFullName() + " Folder: " + e.getMessage());
                             log.info("Copying messages from chunk one by one");
                             copyMessagesOneByOne(targetFolder, messagesChunk);
                         }
@@ -341,7 +342,7 @@ public class ImapCopier implements Runnable {
     }
 
     private boolean isType(Folder folder, int type) throws MessagingException {
-        return ((folder.getType() & Folder.HOLDS_MESSAGES) != 0);
+        return ((folder.getType() & type) != 0);
     }
 
     @Override
