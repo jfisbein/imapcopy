@@ -10,6 +10,7 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.URLName;
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-public class ImapCopier implements Runnable {
+public class ImapCopier implements Runnable, Closeable {
     private final static Logger log = Logger.getLogger(ImapCopier.class);
 
     private Store sourceStore = null;
@@ -200,7 +201,7 @@ public class ImapCopier implements Runnable {
                         } catch (MessagingException e) {
                             log.warn("Error copying messages from " + sourceFolder.getFullName() + " Folder: " + e.getMessage());
                             log.info("Copying messages from chunk one by one");
-                            copyMessagesOneByOne(targetFolder, messagesChunk);
+                            copyMessagesOneByOne(targetFolder, sourceFolder, messagesChunk);
                         }
                         closeFolderIfNeeded(targetFolder);
                     }
@@ -257,13 +258,14 @@ public class ImapCopier implements Runnable {
      * @param targetFolder Folder to store messages
      * @param messages     List of messages
      */
-    private void copyMessagesOneByOne(Folder targetFolder, Message[] messages) {
+    private void copyMessagesOneByOne(Folder targetFolder, Folder sourceFolder, Message[] messages) {
         int counter = 0;
         for (Message message : messages) {
             counter++;
             Message[] aux = new Message[1];
             aux[0] = message;
             try {
+                openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
                 openFolderIfNeeded(targetFolder, Folder.READ_WRITE);
                 targetFolder.appendMessages(aux);
             } catch (MessagingException e) {
@@ -303,6 +305,7 @@ public class ImapCopier implements Runnable {
     /**
      * Closes the open resources
      */
+    @Override
     public void close() {
         closeStore(sourceStore);
         closeStore(targetStore);
