@@ -197,11 +197,12 @@ public class ImapCopier implements Runnable, Closeable {
                         try {
                             log.info("Copying chunk of " + messagesChunk.length + " messages. Pending: " + pendingMessages);
                             targetFolder.appendMessages(messagesChunk);
-                            pendingMessages = pendingMessages - messages.length;
+                            pendingMessages = pendingMessages - messagesChunk.length;
                         } catch (MessagingException e) {
                             log.warn("Error copying messages from " + sourceFolder.getFullName() + " Folder: " + e.getMessage());
                             log.info("Copying messages from chunk one by one");
                             copyMessagesOneByOne(targetFolder, sourceFolder, messagesChunk);
+                            pendingMessages = pendingMessages - messagesChunk.length;
                         }
                         closeFolderIfNeeded(targetFolder);
                     }
