@@ -240,6 +240,7 @@ public class ImapCopier implements Runnable, Closeable {
     private Message[] getNotCopiedMessages(Folder sourceFolder, Folder targetFolder) throws MessagingException {
         List<Message> res = new ArrayList<>();
         if (sourceFolder.getMessageCount() != targetFolder.getMessageCount()) {
+            log.info("SourceFolder[" + sourceFolder.getMessageCount() + "] != TargetFolder[" + targetFolder.getMessageCount() + "]");
             log.info("Looking for non synced messages from folder " + sourceFolder.getFullName());
             List<Message> sourceMessages = Arrays.asList(sourceFolder.getMessages());
             log.debug("Got " + sourceMessages.size() + " messages from source folder");
