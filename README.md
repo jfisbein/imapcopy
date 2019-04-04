@@ -8,7 +8,7 @@ Usage Instructions
 
 #### Run as a docker container: **(recommended)**
 
-        docker run -it --name imapcopy jfisbein/imapcopy imap://peter:mypassword@foo.com imaps://peter%40gmail.com:myotherpasword@imap.gmail.com Spam INBOX [Gmail] Spam Drafts Bin "Bart Simpson"        
+        docker run -it --name imapcopy jfisbein/imapcopy --source imap://peter:mypassword@foo.com --target imaps://peter%40gmail.com:myotherpasword@imap.gmail.com --fromDate 2018-02-01 --toDate 2019-01-01 --excluded Spam INBOX [Gmail] Spam Drafts Bin "Bart Simpson"        
 
 #### Run as a command line tool:
 * Download the application from the repository
@@ -18,8 +18,8 @@ Usage Instructions
         
 * Run the application:
 
-        java -jar target/imapcopy-x.y.z.jar sourceImapAccount targetImapAccount [list of exlcuded folders]    
-        (ex: java -jar target/imapcopy-1.1.0.jar imap://peter:mypassword@foo.com imaps://peter%40gmail.com:myotherpasword@imap.gmail.com Spam INBOX [Gmail])
+        java -jar target/imapcopy-x.y.z.jar --source sourceImapAccount --target targetImapAccount --fromDate filterFromDate --toDate filterToDate --excluded [list of exlcuded folders]    
+        (ex: java -jar target/imapcopy-1.1.0.jar --source imap://peter:mypassword@foo.com --target imaps://peter%40gmail.com:myotherpasword@imap.gmail.com --fromDate 2018-02-01 --toDate 2019-01-01 --excluded Spam INBOX [Gmail])
 
         
 ### Imap accounts url format

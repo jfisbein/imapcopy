@@ -3,6 +3,9 @@ package com.fisbein.joan.model;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.Predicate;
 import org.apache.log4j.Logger;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
 import javax.mail.Folder;
 import javax.mail.Message;
@@ -10,48 +13,61 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.URLName;
+import javax.mail.search.AndTerm;
+import javax.mail.search.ComparisonTerm;
+import javax.mail.search.SentDateTerm;
 import java.io.Closeable;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import static java.time.temporal.ChronoUnit.DAYS;
+
+@Command(usageHelpWidth = 120)
 public class ImapCopier implements Runnable, Closeable {
-    private final static Logger log = Logger.getLogger(ImapCopier.class);
+    private static final Logger log = Logger.getLogger(ImapCopier.class);
 
     private Store sourceStore = null;
 
     private Store targetStore = null;
 
-    private List<String> filteredFolders = new ArrayList<>();
+    @Option(names = {"-s", "--source"}, description = "IMAP source url", required = true)
+    private String imapSource;
 
-    public static void main(String[] args) throws MessagingException {
+    @Option(names = {"-t", "--target"}, description = "IMAP target url", required = true)
+    private String imapTarget;
+
+    @Option(names = "--fromDate", description = "Minimum message sent date to synchronize from", required = true)
+    private LocalDate fromDate;
+
+    @Option(names = "--toDate", description = "Maximum message sent date to synchronize to")
+    private LocalDate toDate;
+
+    @Option(names = {"-e", "--excluded"}, arity = "*", description = "Folders to exclude.")
+    private List<String> filteredFolders;
+
+    public static void main(String[] args) {
         log.info("Starting");
-        log.debug("Parameters length:" + args.length);
-        if (args.length >= 2) {
-            ImapCopier imapCopier = new ImapCopier();
+        CommandLine.run(new ImapCopier(), args);
+        log.info("Done :-)");
 
-            try {
-                log.debug("opening connections");
-                imapCopier.openSourceConnection(args[0].trim());
-                imapCopier.openTargetConnection(args[1].trim());
-                if (args.length > 2) {
-                    for (int i = 2; i < args.length; i++) {
-                        imapCopier.addFilteredFolder(args[i]);
-                    }
-                }
-                imapCopier.copy();
-            } finally {
-                imapCopier.close();
-            }
+    }
+
+    private void init() throws MessagingException {
+        openSourceConnection(imapSource);
+        openTargetConnection(imapTarget);
+        if (toDate != null) {
+            toDate = toDate.plus(1, DAYS);
         } else {
-            String usage = "usage: imapCopy source target [excludedFolder]\n";
-            usage += "source & target format: protocol://user[:password]@server[:port]\n";
-            usage += "protocols: imap or imaps";
-            System.out.println(usage);
+            toDate = LocalDate.now().plus(1, DAYS);
         }
+
     }
 
     /**
@@ -164,7 +180,7 @@ public class ImapCopier implements Runnable, Closeable {
     public void copy() throws MessagingException {
         Folder defaultSourceFolder = sourceStore.getDefaultFolder();
         Folder defaultTargetFolder = targetStore.getDefaultFolder();
-        copyFolderAndMessages(defaultSourceFolder, defaultTargetFolder);
+        copyFolderAndMessages(defaultSourceFolder, defaultTargetFolder, fromDate, toDate);
     }
 
     /**
@@ -174,7 +190,7 @@ public class ImapCopier implements Runnable, Closeable {
      * @param targetFolder Target Folder
      * @throws MessagingException Messaging Exception
      */
-    private void copyFolderAndMessages(Folder sourceFolder, Folder targetFolder)
+    private void copyFolderAndMessages(Folder sourceFolder, Folder targetFolder, LocalDate fromDate, LocalDate toDate)
             throws MessagingException {
 
         if (sourceFolder.exists() && !filteredFolders.contains(sourceFolder.getFullName())) {
@@ -184,30 +200,35 @@ public class ImapCopier implements Runnable, Closeable {
                 openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
                 openFolderIfNeeded(targetFolder, Folder.READ_WRITE);
 
-                Message[] notCopiedMessages = getNotCopiedMessages(sourceFolder, targetFolder);
+                if (sourceFolder.getMessageCount() != targetFolder.getMessageCount()) {
+                    LocalDate messagesDate = fromDate;
+                    while (messagesDate.isBefore(toDate)) {
+                        log.info("Looking for messages for " + messagesDate);
+                        Message[] notCopiedMessages = getNotCopiedMessages(sourceFolder, targetFolder, messagesDate);
 
-                log.debug("Copying " + notCopiedMessages.length + " messages from " + sourceFolder.getFullName() + " Folder");
-                int pendingMessages = notCopiedMessages.length;
-                if (pendingMessages > 0) {
-                    Message[][] messages = chunkArray(notCopiedMessages, 100);
+                        log.debug("Copying " + notCopiedMessages.length + " messages from " + sourceFolder.getFullName() + " Folder for " + messagesDate);
 
-                    for (Message[] messagesChunk : messages) {
-                        openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
-                        openFolderIfNeeded(targetFolder, Folder.READ_WRITE);
-                        try {
-                            log.info("Copying chunk of " + messagesChunk.length + " messages. Pending: " + pendingMessages);
-                            targetFolder.appendMessages(messagesChunk);
-                            pendingMessages = pendingMessages - messagesChunk.length;
-                        } catch (MessagingException e) {
-                            log.warn("Error copying messages from " + sourceFolder.getFullName() + " Folder: " + e.getMessage());
-                            log.info("Copying messages from chunk one by one");
-                            copyMessagesOneByOne(targetFolder, sourceFolder, messagesChunk);
-                            pendingMessages = pendingMessages - messagesChunk.length;
+                        if (notCopiedMessages.length > 0) {
+                            openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
+                            openFolderIfNeeded(targetFolder, Folder.READ_WRITE);
+                            try {
+                                log.info("Copying " + notCopiedMessages.length + " messages.");
+                                targetFolder.appendMessages(notCopiedMessages);
+                            } catch (MessagingException e) {
+                                log.warn("Error copying messages from " + sourceFolder.getFullName() + " Folder: " + e.getMessage());
+                                log.info("Copying messages from chunk one by one");
+                                copyMessagesOneByOne(targetFolder, sourceFolder, notCopiedMessages);
+                            }
+                            closeFolderIfNeeded(targetFolder);
                         }
-                        closeFolderIfNeeded(targetFolder);
+
+                        messagesDate = messagesDate.plusDays(1);
                     }
+
+                    closeFolderIfNeeded(sourceFolder);
+                } else {
+                    log.info("Both folders have same amount of messages, skipping.");
                 }
-                closeFolderIfNeeded(sourceFolder);
             }
 
             //Iterating subfolders
@@ -220,37 +241,33 @@ public class ImapCopier implements Runnable, Closeable {
                     targetSubFolder.create(sourceSubFolder.getType());
                 }
 
-                copyFolderAndMessages(sourceSubFolder, targetSubFolder);
+                copyFolderAndMessages(sourceSubFolder, targetSubFolder, fromDate, toDate);
             }
         } else {
             log.info("Skipping folder " + sourceFolder.getFullName());
         }
     }
 
-    private Message[][] chunkArray(Message[] array, int chunkSize) {
-        int chunkedSize = (int) Math.ceil((double) array.length / chunkSize); // chunked array size
-        Message[][] chunked = new Message[chunkedSize][chunkSize];
-        for (int index = 0; index < chunkedSize; index++) {
-            Message[] chunk = new Message[Math.min(chunkSize, array.length - index * chunkSize)]; // small array
-            System.arraycopy(array, index * chunkSize, chunk, 0, Math.min(chunkSize, array.length - index * chunkSize));
-            chunked[index] = chunk;
-        }
-        return chunked;
-    }
+    private Message[] getNotCopiedMessages(Folder sourceFolder, Folder targetFolder, LocalDate date) throws MessagingException {
+        List<Message> res = Collections.emptyList();
+        Date startDate = toDate(date);
+        Date endDate = toDate(date.plus(1, DAYS));
 
-    private Message[] getNotCopiedMessages(Folder sourceFolder, Folder targetFolder) throws MessagingException {
-        List<Message> res = new ArrayList<>();
-        if (sourceFolder.getMessageCount() != targetFolder.getMessageCount()) {
-            log.info("Looking for non synced messages from folder " + sourceFolder.getFullName());
-            List<Message> sourceMessages = Arrays.asList(sourceFolder.getMessages());
-            log.debug("Got " + sourceMessages.size() + " messages from source folder");
+        openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
+        List<Message> sourceMessages = Arrays.asList(sourceFolder.search(new AndTerm(new SentDateTerm(ComparisonTerm.GE, startDate), new SentDateTerm(ComparisonTerm.LT, endDate))));
+
+        if (!sourceMessages.isEmpty()) {
             openFolderIfNeeded(targetFolder, Folder.READ_ONLY);
-            res = ListUtils.select(sourceMessages, new MessageFilterPredicate(targetFolder.getMessages()));
-        } else {
-            log.debug("Source & target folder have the same size, skipping.");
+            Message[] targetMessages = targetFolder.search(new AndTerm(new SentDateTerm(ComparisonTerm.GE, startDate), new SentDateTerm(ComparisonTerm.LT, endDate)));
+
+            res = ListUtils.select(sourceMessages, new MessageFilterPredicate(targetMessages));
         }
 
         return res.toArray(new Message[0]);
+    }
+
+    private Date toDate(LocalDate localDate) {
+        return java.sql.Date.valueOf(localDate);
     }
 
     /**
@@ -352,6 +369,7 @@ public class ImapCopier implements Runnable, Closeable {
     @Override
     public void run() {
         try {
+            init();
             copy();
         } catch (MessagingException e) {
             log.warn(e.getMessage(), e);
