@@ -256,6 +256,7 @@ public class ImapCopier implements Runnable, Closeable {
         List<Message> sourceMessages = Arrays.asList(sourceFolder.search(new AndTerm(new SentDateTerm(ComparisonTerm.GE, startDate), new SentDateTerm(ComparisonTerm.LT, endDate))));
 
         if (!sourceMessages.isEmpty()) {
+
             openFolderIfNeeded(targetFolder, Folder.READ_ONLY);
             Message[] targetMessages = targetFolder.search(new AndTerm(new SentDateTerm(ComparisonTerm.GE, startDate), new SentDateTerm(ComparisonTerm.LT, endDate)));
 
