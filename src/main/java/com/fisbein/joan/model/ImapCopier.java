@@ -50,13 +50,12 @@ public class ImapCopier implements Runnable, Closeable {
     private LocalDate toDate;
 
     @Option(names = {"-e", "--excluded"}, arity = "*", description = "Folders to exclude.")
-    private List<String> filteredFolders;
+    private List<String> filteredFolders = new ArrayList<>();
 
     public static void main(String[] args) {
         log.info("Starting");
         CommandLine.run(new ImapCopier(), args);
         log.info("Done :-)");
-
     }
 
     private void init() throws MessagingException {
@@ -67,7 +66,6 @@ public class ImapCopier implements Runnable, Closeable {
         } else {
             toDate = LocalDate.now().plus(1, DAYS);
         }
-
     }
 
     /**
@@ -205,23 +203,9 @@ public class ImapCopier implements Runnable, Closeable {
                     while (messagesDate.isBefore(toDate)) {
                         log.info("Looking for messages for " + messagesDate);
                         Message[] notCopiedMessages = getNotCopiedMessages(sourceFolder, targetFolder, messagesDate);
-
                         log.debug("Copying " + notCopiedMessages.length + " messages from " + sourceFolder.getFullName() + " Folder for " + messagesDate);
 
-                        if (notCopiedMessages.length > 0) {
-                            openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
-                            openFolderIfNeeded(targetFolder, Folder.READ_WRITE);
-                            try {
-                                log.info("Copying " + notCopiedMessages.length + " messages.");
-                                targetFolder.appendMessages(notCopiedMessages);
-                            } catch (MessagingException e) {
-                                log.warn("Error copying messages from " + sourceFolder.getFullName() + " Folder: " + e.getMessage());
-                                log.info("Copying messages from chunk one by one");
-                                copyMessagesOneByOne(targetFolder, sourceFolder, notCopiedMessages);
-                            }
-                            closeFolderIfNeeded(targetFolder);
-                        }
-
+                        copyMessages(sourceFolder, targetFolder, notCopiedMessages);
                         messagesDate = messagesDate.plusDays(1);
                     }
 
@@ -245,6 +229,21 @@ public class ImapCopier implements Runnable, Closeable {
             }
         } else {
             log.info("Skipping folder " + sourceFolder.getFullName());
+        }
+    }
+
+    private void copyMessages(Folder sourceFolder, Folder targetFolder, Message[] notCopiedMessages) throws MessagingException {
+        if (notCopiedMessages.length > 0) {
+            openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
+            openFolderIfNeeded(targetFolder, Folder.READ_WRITE);
+            try {
+                targetFolder.appendMessages(notCopiedMessages);
+            } catch (MessagingException e) {
+                log.warn("Error copying messages from " + sourceFolder.getFullName() + " Folder: " + e.getMessage());
+                log.info("Copying messages from chunk one by one");
+                copyMessagesOneByOne(targetFolder, sourceFolder, notCopiedMessages);
+            }
+            closeFolderIfNeeded(targetFolder);
         }
     }
 
