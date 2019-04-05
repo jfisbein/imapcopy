@@ -13,7 +13,9 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -47,39 +49,45 @@ class ImapCopierIT {
         MimeMessage inboxMessage = createMimeMessage(GreenMailUtil.random(), GreenMailUtil.random(), SOURCE_USER, greenMailSource); // Construct message
         MimeMessage testMessage1 = createMimeMessage(GreenMailUtil.random(), GreenMailUtil.random(), SOURCE_USER, greenMailSource); // Construct message
         MimeMessage testMessage2 = createMimeMessage(GreenMailUtil.random(), GreenMailUtil.random(), SOURCE_USER, greenMailSource); // Construct message
+        MimeMessage excludedMessage = createMimeMessage(GreenMailUtil.random(), GreenMailUtil.random(), SOURCE_USER, greenMailSource); // Construct message
+
         sourceUser.deliver(inboxMessage);
-        IMAPStore store = greenMailSource.getImap().createStore();
-        store.connect("localhost", greenMailSource.getImap().getPort(), SOURCE_USER, SOURCE_PASS);
-        Folder testFolder = store.getDefaultFolder().getFolder("test");
+        IMAPStore sourceStore = greenMailSource.getImap().createStore();
+        sourceStore.connect("localhost", greenMailSource.getImap().getPort(), SOURCE_USER, SOURCE_PASS);
+
+        Folder testFolder = sourceStore.getDefaultFolder().getFolder("test");
         testFolder.create(Folder.HOLDS_MESSAGES);
         Message[] sourceTestMessages = {testMessage1, testMessage2};
         testFolder.appendMessages(sourceTestMessages);
 
-        String[] args = new String[8];
-        args[0] = "--source";
-        args[1] = generateImapUrl(SOURCE_USER, SOURCE_PASS, "localhost", greenMailSource.getImap().getPort());
-        args[2] = "--target";
-        args[3] = generateImapUrl(TARGET_USER, TARGET_PASS, "localhost", greenMailTarget.getImap().getPort());
-        args[4] = "--fromDate";
-        args[5] = LocalDate.now().toString();
-        args[6] = "--toDate";
-        args[7] = LocalDate.now().toString();
+        Folder excludedFolder = sourceStore.getDefaultFolder().getFolder("excluded");
+        excludedFolder.create(Folder.HOLDS_MESSAGES);
+        excludedFolder.appendMessages(new Message[]{excludedMessage});
+
+        String[] args = createArgs(generateImapUrl(SOURCE_USER, SOURCE_PASS, "localhost", greenMailSource.getImap().getPort()),
+                generateImapUrl(TARGET_USER, TARGET_PASS, "localhost", greenMailTarget.getImap().getPort()), LocalDate.now(), LocalDate.now(), "excluded");
 
         ImapCopier.main(args);
 
+        // Asserts
         IMAPStore targetStore = greenMailTarget.getImap().createStore();
         targetStore.connect("localhost", greenMailTarget.getImap().getPort(), TARGET_USER, TARGET_PASS);
 
+        // Inbox messages
         Folder targetInboxFolder = targetStore.getDefaultFolder().getFolder("INBOX");
         targetInboxFolder.open(Folder.READ_ONLY);
         assertEquals(1, targetInboxFolder.getMessageCount());
         Message[] targetInboxMessages = targetInboxFolder.getMessages();
         assertEquals(targetInboxMessages[0].getHeader("Message-ID")[0], inboxMessage.getHeader("Message-ID")[0]);
 
+        // Test folder messages
         Folder targetTestFolder = targetStore.getDefaultFolder().getFolder("test");
         targetTestFolder.open(Folder.READ_ONLY);
         Message[] targetTestMessages = targetTestFolder.getMessages();
         assertMessagesArrayEqualsById(sourceTestMessages, targetTestMessages);
+
+        // Excluded folder
+        assertFalse(targetStore.getDefaultFolder().getFolder("excluded").exists());
     }
 
     private void assertMessagesArrayEqualsById(Message[] expected, Message[] actual) {
@@ -117,5 +125,35 @@ class ImapCopierIT {
 
     private String generateImapUrl(String user, String pass, String host, int port) {
         return "imap://" + user.replace("@", "%40") + ":" + pass + "@" + host + ":" + port;
+    }
+
+    private String[] createArgs(String sourceUrl, String targetUrl, LocalDate fromDate, LocalDate toDate, String... excludedFolders) {
+        List<String> args = new ArrayList<>();
+        if (sourceUrl != null) {
+            args.add("--source");
+            args.add(sourceUrl);
+        }
+
+        if (targetUrl != null) {
+            args.add("--target");
+            args.add(targetUrl);
+        }
+
+        if (fromDate != null) {
+            args.add("--fromDate");
+            args.add(fromDate.toString());
+        }
+
+        if (toDate != null) {
+            args.add("--toDate");
+            args.add(toDate.toString());
+        }
+
+        if (excludedFolders != null) {
+            args.add("--excluded");
+            args.addAll(Arrays.asList(excludedFolders));
+        }
+
+        return args.toArray(new String[0]);
     }
 }

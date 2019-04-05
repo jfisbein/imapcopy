@@ -69,6 +69,8 @@ public class ImapCopier implements Runnable, Closeable {
         Set aux = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         aux.addAll(filteredFolders);
         filteredFolders = aux;
+        log.info("Excluded folders:" + filteredFolders);
+        log.info("From Date:" + fromDate + ", To Date:" + toDate);
     }
 
     /**
@@ -223,7 +225,8 @@ public class ImapCopier implements Runnable, Closeable {
             logFoldersList("Source Folders", sourceFolders);
             for (Folder sourceSubFolder : sourceFolders) {
                 Folder targetSubFolder = targetFolder.getFolder(sourceSubFolder.getName());
-                if (!targetSubFolder.exists()) {
+
+                if (!targetSubFolder.exists() && !filteredFolders.contains(targetSubFolder.getFullName())) {
                     log.debug("Creating target Folder: " + targetSubFolder.getFullName());
                     targetSubFolder.create(sourceSubFolder.getType());
                 }
