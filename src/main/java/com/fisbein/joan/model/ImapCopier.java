@@ -26,8 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-
-import static java.time.temporal.ChronoUnit.DAYS;
+import java.util.TreeSet;
 
 @Command(usageHelpWidth = 120)
 public class ImapCopier implements Runnable, Closeable {
@@ -50,7 +49,7 @@ public class ImapCopier implements Runnable, Closeable {
     private LocalDate toDate;
 
     @Option(names = {"-e", "--excluded"}, arity = "*", description = "Folders to exclude.")
-    private List<String> filteredFolders = new ArrayList<>();
+    private Set<String> filteredFolders = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
     public static void main(String[] args) {
         log.info("Starting");
@@ -62,10 +61,14 @@ public class ImapCopier implements Runnable, Closeable {
         openSourceConnection(imapSource);
         openTargetConnection(imapTarget);
         if (toDate != null) {
-            toDate = toDate.plus(1, DAYS);
+            toDate = toDate.plusDays(1);
         } else {
-            toDate = LocalDate.now().plus(1, DAYS);
+            toDate = LocalDate.now().plusDays(1);
         }
+
+        Set aux = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        aux.addAll(filteredFolders);
+        filteredFolders = aux;
     }
 
     /**
@@ -250,7 +253,7 @@ public class ImapCopier implements Runnable, Closeable {
     private Message[] getNotCopiedMessages(Folder sourceFolder, Folder targetFolder, LocalDate date) throws MessagingException {
         List<Message> res = Collections.emptyList();
         Date startDate = toDate(date);
-        Date endDate = toDate(date.plus(1, DAYS));
+        Date endDate = toDate(date.plusDays(1));
 
         openFolderIfNeeded(sourceFolder, Folder.READ_ONLY);
         List<Message> sourceMessages = Arrays.asList(sourceFolder.search(new AndTerm(new SentDateTerm(ComparisonTerm.GE, startDate), new SentDateTerm(ComparisonTerm.LT, endDate))));
