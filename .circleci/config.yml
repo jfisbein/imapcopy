@@ -36,7 +36,7 @@ jobs:
       - run:
           name: Run tests
           command: |
-            mvn integration-test
+            mvn test integration-test
       - run:
           name: Save test results
           command: |
@@ -47,7 +47,7 @@ jobs:
       - run:
           name: Run Sonar analisis
           command: |
-            mvn clean package sonar:sonar \
+            mvn sonar:sonar \
               -Dsonar.projectKey=jfisbein_imapcopy \
               -Dsonar.organization=jfisbein-github \
               -Dsonar.host.url=https://sonarcloud.io \
