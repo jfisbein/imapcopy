@@ -14,7 +14,6 @@ jobs:
     environment:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
-      CC_TEST_REPORTER_ID: dad2dbfa38e25b0cf03497c48c838e217e6bda64c41d9211c51cb3fc02cd8009
 
     steps:
       - checkout
@@ -44,6 +43,15 @@ jobs:
             mkdir -p ~/junit/
             find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
           when: always
+
+      - run:
+          name: Run Sonar analisis
+          command: |
+            mvn clean package sonar:sonar \
+              -Dsonar.projectKey=jfisbein_imapcopy \
+              -Dsonar.organization=jfisbein-github \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.login=$SONARQUBE_LOGIN
 
       - store_test_results:
           path: ~/junit
