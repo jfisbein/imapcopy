@@ -6,10 +6,10 @@
     <version>1.2.0</version>
 
     <inceptionYear>2015</inceptionYear>
-    <url>https://github.com/jfisbein/imapcopy</url>
+    <url>https://github.com/jfisbein/ouidb-to-json-publisher</url>
     <scm>
-        <url>https://github.com/jfisbein/imapcopy</url>
-        <developerConnection>git@github.com:jfisbein/imapcopy.git</developerConnection>
+        <url>https://github.com/jfisbein/ouidb-to-json-publisher</url>
+        <developerConnection>git@github.com:jfisbein/ouidb-to-json-publisher.git</developerConnection>
     </scm>
 
     <prerequisites>
