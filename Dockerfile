@@ -5,4 +5,4 @@ RUN mvn package --batch-mode
 
 FROM openjdk:11-jre-slim
 COPY --from=maven target/imapcopy-*.jar /imapcopy.jar
-ENTRYPOINT ["java", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCGroupMemoryLimitForHeap", "-jar", "/imapcopy.jar"]
+ENTRYPOINT ["java", "-jar", "/imapcopy.jar"]
