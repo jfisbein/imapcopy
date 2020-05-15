@@ -1,8 +1,8 @@
 package com.fisbein.joan.model;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.Predicate;
-import org.apache.log4j.Logger;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -28,10 +28,9 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
+@Slf4j
 @Command(usageHelpWidth = 120)
 public class ImapCopier implements Runnable, Closeable {
-    private static final Logger log = Logger.getLogger(ImapCopier.class);
-
     private Store sourceStore = null;
 
     private Store targetStore = null;
@@ -53,7 +52,7 @@ public class ImapCopier implements Runnable, Closeable {
 
     public static void main(String[] args) {
         log.info("Starting");
-        CommandLine.run(new ImapCopier(), args);
+        new CommandLine(new ImapCopier()).execute(args);
         log.info("Done :-)");
     }
 
@@ -66,7 +65,7 @@ public class ImapCopier implements Runnable, Closeable {
             toDate = LocalDate.now().plusDays(1);
         }
 
-        Set aux = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        Set<String> aux = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         aux.addAll(filteredFolders);
         filteredFolders = aux;
         log.info("Excluded folders:" + filteredFolders);
