@@ -24,7 +24,7 @@
         <lombok.version>1.18.12</lombok.version>
         <picocli.version>4.4.0</picocli.version>
         <commons-collections.version>4.4</commons-collections.version>
-        <greenmail.version>1.5.13</greenmail.version>
+        <greenmail.version>1.5.14</greenmail.version>
         <javafaker.version>1.0.2</javafaker.version>
     </properties>
 
