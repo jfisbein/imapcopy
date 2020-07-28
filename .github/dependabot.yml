@@ -6,13 +6,13 @@ updates:
     interval: daily
     time: "04:00"
   open-pull-requests-limit: 10
+  reviewers: [ "jfisbein" ]
+  assignees: [ "jfisbein" ]
 - package-ecosystem: maven
   directory: "/"
   schedule:
     interval: daily
     time: "04:00"
   open-pull-requests-limit: 10
-  reviewers:
-  - jfisbein
-  assignees:
-  - jfisbein
+  reviewers: [ "jfisbein" ]
+  assignees: [ "jfisbein" ]
