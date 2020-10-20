@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>jfisbein</groupId>
   <artifactId>imapcopy</artifactId>
-  <version>1.2.3</version>
+  <version>1.2.4-SNAPSHOT</version>
 
   <inceptionYear>2015</inceptionYear>
   <url>https://github.com/jfisbein/imapcopy</url>
