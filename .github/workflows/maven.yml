@@ -108,4 +108,4 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: jfisbein/imapcopy
-          readme-filepath: ./Readme.md
+          readme-filepath: ./README.md
