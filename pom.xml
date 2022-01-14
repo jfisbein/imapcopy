@@ -20,7 +20,7 @@
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <junit.version>5.8.2</junit.version>
     <javax.mail.version>1.6.2</javax.mail.version>
-    <slf4j.version>1.7.32</slf4j.version>
+    <slf4j.version>1.7.33</slf4j.version>
     <lombok.version>1.18.22</lombok.version>
     <picocli.version>4.6.2</picocli.version>
     <commons-collections.version>4.4</commons-collections.version>
