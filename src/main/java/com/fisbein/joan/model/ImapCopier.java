@@ -1,5 +1,6 @@
 package com.fisbein.joan.model;
 
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.Predicate;
@@ -59,11 +60,7 @@ public class ImapCopier implements Runnable, Closeable {
     private void init() throws MessagingException {
         openSourceConnection(imapSource);
         openTargetConnection(imapTarget);
-        if (toDate != null) {
-            toDate = toDate.plusDays(1);
-        } else {
-            toDate = LocalDate.now().plusDays(1);
-        }
+        toDate = Objects.requireNonNullElseGet(toDate, LocalDate::now).plusDays(1);
 
         Set<String> aux = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         aux.addAll(filteredFolders);
@@ -383,7 +380,7 @@ public class ImapCopier implements Runnable, Closeable {
         }
     }
 
-    class MessageFilterPredicate implements Predicate<Message> {
+    static class MessageFilterPredicate implements Predicate<Message> {
         Set<String> messagesId = new HashSet<>();
 
         MessageFilterPredicate(Message[] filterMessages) {
