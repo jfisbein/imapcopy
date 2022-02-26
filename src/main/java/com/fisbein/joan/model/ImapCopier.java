@@ -381,7 +381,7 @@ public class ImapCopier implements Runnable, Closeable {
     }
 
     static class MessageFilterPredicate implements Predicate<Message> {
-        Set<String> messagesId = new HashSet<>();
+        private final Set<String> messagesId = new HashSet<>();
 
         MessageFilterPredicate(Message[] filterMessages) {
             for (Message message : filterMessages) {
