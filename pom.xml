@@ -22,7 +22,7 @@
     <javax.mail.version>1.6.2</javax.mail.version>
     <slf4j.version>2.0.6</slf4j.version>
     <lombok.version>1.18.26</lombok.version>
-    <picocli.version>4.7.0</picocli.version>
+    <picocli.version>4.7.1</picocli.version>
     <commons-collections.version>4.4</commons-collections.version>
     <greenmail.version>1.6.12</greenmail.version>
     <javafaker.version>1.0.2</javafaker.version>
