@@ -18,13 +18,13 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
+    <jakarta.mail.version>2.0.1</jakarta.mail.version>
     <junit.version>5.9.3</junit.version>
-    <javax.mail.version>1.6.2</javax.mail.version>
     <slf4j.version>2.0.7</slf4j.version>
     <lombok.version>1.18.28</lombok.version>
     <picocli.version>4.7.4</picocli.version>
     <commons-collections.version>4.4</commons-collections.version>
-    <greenmail.version>1.6.12</greenmail.version>
+    <greenmail.version>2.0.0</greenmail.version>
     <javafaker.version>1.0.2</javafaker.version>
     <assertj.version>3.24.2</assertj.version>
   </properties>
@@ -44,16 +44,15 @@
   <dependencies>
 
     <dependency>
-      <groupId>javax.mail</groupId>
-      <artifactId>javax.mail-api</artifactId>
-      <version>${javax.mail.version}</version>
-      <scope>provided</scope>
+      <groupId>jakarta.mail</groupId>
+      <artifactId>jakarta.mail-api</artifactId>
+      <version>${jakarta.mail.version}</version>
     </dependency>
 
     <dependency>
       <groupId>com.sun.mail</groupId>
-      <artifactId>javax.mail</artifactId>
-      <version>${javax.mail.version}</version>
+      <artifactId>jakarta.mail</artifactId>
+      <version>${jakarta.mail.version}</version>
     </dependency>
 
     <!-- Logging -->
