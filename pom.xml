@@ -19,7 +19,7 @@
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <junit.version>5.9.1</junit.version>
-    <javax.mail.version>1.6.2</javax.mail.version>
+    <jakarta.mail.version>2.0.1</jakarta.mail.version>
     <slf4j.version>2.0.6</slf4j.version>
     <lombok.version>1.18.24</lombok.version>
     <picocli.version>4.7.0</picocli.version>
@@ -44,16 +44,15 @@
   <dependencies>
 
     <dependency>
-      <groupId>javax.mail</groupId>
-      <artifactId>javax.mail-api</artifactId>
-      <version>${javax.mail.version}</version>
-      <scope>provided</scope>
+      <groupId>jakarta.mail</groupId>
+      <artifactId>jakarta.mail-api</artifactId>
+      <version>${jakarta.mail.version}</version>
     </dependency>
 
     <dependency>
       <groupId>com.sun.mail</groupId>
-      <artifactId>javax.mail</artifactId>
-      <version>${javax.mail.version}</version>
+      <artifactId>jakarta.mail</artifactId>
+      <version>${jakarta.mail.version}</version>
     </dependency>
 
     <!-- Logging -->
