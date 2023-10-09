@@ -22,7 +22,7 @@
     <junit.version>5.9.3</junit.version>
     <slf4j.version>2.0.7</slf4j.version>
     <lombok.version>1.18.28</lombok.version>
-    <picocli.version>4.7.4</picocli.version>
+    <picocli.version>4.7.5</picocli.version>
     <commons-collections.version>4.4</commons-collections.version>
     <greenmail.version>2.0.0</greenmail.version>
     <javafaker.version>1.0.2</javafaker.version>
