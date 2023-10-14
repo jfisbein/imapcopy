@@ -21,7 +21,7 @@
     <jakarta.mail.version>2.0.1</jakarta.mail.version>
     <junit.version>5.10.0</junit.version>
     <slf4j.version>2.0.7</slf4j.version>
-    <lombok.version>1.18.28</lombok.version>
+    <lombok.version>1.18.30</lombok.version>
     <picocli.version>4.7.5</picocli.version>
     <commons-collections.version>4.4</commons-collections.version>
     <greenmail.version>2.0.0</greenmail.version>
