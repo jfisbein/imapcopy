@@ -26,7 +26,7 @@
     <commons-collections.version>4.5.0</commons-collections.version>
     <greenmail.version>2.1.4</greenmail.version>
     <javafaker.version>1.0.2</javafaker.version>
-    <assertj.version>3.27.3</assertj.version>
+    <assertj.version>3.27.4</assertj.version>
   </properties>
 
   <dependencyManagement>
